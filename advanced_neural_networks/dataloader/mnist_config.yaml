@@ -1,0 +1,5 @@
+root_dir: "~/Projects/advanced-neural-networks/data"
+download: True
+dataset_statistics:
+  mean: 0.1307
+  std: 0.3081
