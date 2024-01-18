@@ -3,6 +3,7 @@ File contains: Model architecture for a simple convolution network
 """
 import torch
 import torch.nn as nn
+import torch.nn.init as init
 import numpy as np
 
 class SimpleConvNet(nn.Module):
@@ -13,6 +14,7 @@ class SimpleConvNet(nn.Module):
         self.layers = nn.Sequential(
             nn.Conv2d(1, 10, kernel_size = 3),
             nn.ReLU(),
+            nn.BatchNorm2d(10),
             nn.Flatten(),
             nn.Linear(26 * 26 * 10, 50),
             nn.ReLU(),
@@ -21,6 +23,10 @@ class SimpleConvNet(nn.Module):
             nn.Linear(20, 10),
             nn.Softmax(1)
         )
+
+        for layer in self.layers:
+            if isinstance(layer, nn.Linear):
+                init.xavier_uniform_(layer.weight)
     
     def forward(self, x):
         return self.layers(x)
