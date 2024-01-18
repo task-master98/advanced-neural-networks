@@ -7,16 +7,17 @@ import numpy as np
 import yaml
 import os
 
-default_config_file = "/Users/ishaanroy/Projects/advanced-neural-networks/advanced_neural_networks/dataloader/mnist_config.yaml"
+default_config_file = "mnist_config.yaml"
 
 class MNISTDataset(torch.utils.data.Dataset):
 
-    def __init__(self, config_file: str = default_config_file, train: str = False, transforms: list = []):
+    def __init__(self, config_file: str = default_config_file, location: str = "cloud",
+                 train: str = False, transforms: list = []):
 
         with open(config_file, "rb") as f:
             self.config = yaml.load(f, Loader = yaml.FullLoader)
         
-        self.root_dir = self.config["root_dir"]
+        self.root_dir = self.config["root_dir"][location]
         self.download = self.config["download"]
         if not os.path.isdir(self.root_dir):
             self.download = False
