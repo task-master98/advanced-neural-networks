@@ -2,6 +2,7 @@
 File contains: dataset class for MNIST dataset
 """
 import torch
+import torch.nn.functional as F
 import torchvision
 import numpy as np
 import yaml
@@ -42,7 +43,12 @@ class MNISTDataset(torch.utils.data.Dataset):
     def __getitem__(self, idx):
 
         img_tensor, label = self.dataset[idx]
+        label_tensor = torch.Tensor([label]).long()
+        label = F.one_hot(label_tensor, num_classes = 10).double()
         return (img_tensor, label)
+
+    def __len__(self):
+        return len(self.dataset)
         
 
 if __name__ == "__main__":
