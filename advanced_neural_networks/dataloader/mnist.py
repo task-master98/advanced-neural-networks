@@ -1,5 +1,10 @@
 """
 File contains: dataset class for MNIST dataset
+#TODO:
+-> Implement stratified cross validation on the training dataset
+-> Hyperparameter tuning is to be done for each k-fold cross validation
+    i.e., each combination of the hyperparameters should have a different cross
+    validation
 """
 import torch
 import torch.nn.functional as F
