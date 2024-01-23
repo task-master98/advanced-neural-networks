@@ -13,7 +13,8 @@ import numpy as np
 class LeNet(nn.Module):
 
     def __init__(self, input_shape: tuple, n_conv_blocks: int, out_channel_list: list,
-                 kernel_size: int, pool_size: int):
+                 kernel_size: int, pool_size: int, n_linear_layers: int,
+                 n_neurons_list: list):
         super().__init__()
        
         self.input_shape = input_shape
@@ -46,14 +47,16 @@ class LeNet(nn.Module):
         self.conv_layers = nn.Sequential(*self.conv_blocks)
         self.flatten = nn.Flatten()
         output_shape = (bs, out_channel_list[-1], height, width)
-        self.fc1 = nn.Linear(in_features = int(out_channel_list[-1] * height * width), out_features = 10)
-        self.lin_activation = nn.ReLU()
-        
 
-        self.linear_layers = nn.Sequential(
-            self.fc1,
-            self.lin_activation                       
-        )
+        self.linear_blocks = []
+        in_features = int(out_channel_list[-1] * height * width)
+        for jtr in range(n_linear_layers):
+            out_features = n_neurons_list[jtr]
+            linear_block = self._linear_block(in_features, out_features)
+            self.linear_blocks.append(linear_block)
+            in_features = out_features
+        
+        self.linear_layers = nn.Sequential(*self.linear_blocks)        
         self.softmax = nn.Softmax(1)
     
     def _conv_blocks(self, in_channels: int, out_channels: int,
@@ -70,6 +73,13 @@ class LeNet(nn.Module):
         )
 
         return conv_block
+    
+    def _linear_block(self, in_features: int, out_features: int):
+        linear_layer = nn.Linear(in_features, out_features)
+        relu_layer = nn.ReLU()
+
+        linear_block = nn.Sequential(linear_layer, relu_layer)
+        return linear_block
     
     def _compute_ft_map_shape(self, height: int, width: int,
                               kernel_size: int, stride_size: int,
@@ -91,11 +101,13 @@ class LeNet(nn.Module):
 if __name__ == "__main__":
 
     x = torch.randn(1, 1, 28, 28)
-    n_conv_blocks = 2
-    out_channel_list = [6, 16]
-    kernel_size = 5
+    n_conv_blocks = 3
+    out_channel_list = [2, 8, 16]
+    kernel_size = 3
     pool_size = 2
-    model = LeNet(list(x.shape), n_conv_blocks, out_channel_list, kernel_size, pool_size, )
+    n_linear_layers = 2
+    n_neurons_list = [84, 10]
+    model = LeNet(list(x.shape), n_conv_blocks, out_channel_list, kernel_size, pool_size, n_linear_layers, n_neurons_list)
     y = model(x)
     print(y.shape)
 
