@@ -18,7 +18,7 @@ default_config_file = "mnist_config.yaml"
 class MNISTDataset(torch.utils.data.Dataset):
 
     def __init__(self, config_file: str = default_config_file, location: str = "cloud",
-                 train: str = False, transforms: list = []):
+                 train: str = False, transforms: list = [], one_hot: bool = True):
 
         with open(config_file, "rb") as f:
             self.config = yaml.load(f, Loader = yaml.FullLoader)
@@ -44,12 +44,14 @@ class MNISTDataset(torch.utils.data.Dataset):
                                                   train = train,
                                                   transform = self.transforms,
                                                   download = self.download)
+        self.one_hot = one_hot
     
     def __getitem__(self, idx):
 
         img_tensor, label = self.dataset[idx]
-        label_tensor = torch.Tensor([label]).long()
-        label = F.one_hot(label_tensor, num_classes = 10).double()
+        if self.one_hot:
+            label_tensor = torch.Tensor([label]).long()
+            label = F.one_hot(label_tensor, num_classes = 10).double()
         return (img_tensor, label)
 
     def __len__(self):
@@ -58,5 +60,6 @@ class MNISTDataset(torch.utils.data.Dataset):
 
 if __name__ == "__main__":
 
-    mnist_dataset = MNISTDataset()
+    mnist_dataset = MNISTDataset(location="local", one_hot=False)
     img, label = mnist_dataset[0]
+    print(label)
