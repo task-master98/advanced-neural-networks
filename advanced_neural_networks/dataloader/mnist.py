@@ -19,7 +19,7 @@ class MNISTDataset(torch.utils.data.Dataset):
 
     def __init__(self, config: str = default_config_file, location: str = "cloud",
                  train: str = False, transforms: list = [], one_hot: bool = True):
-        if config.endswith("yaml"):
+        if not isinstance(config, dict):
             with open(config, "rb") as f:
                 self.config = yaml.load(f, Loader = yaml.FullLoader)
         else:
