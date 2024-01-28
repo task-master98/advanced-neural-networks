@@ -17,11 +17,13 @@ default_config_file = "mnist_config.yaml"
 
 class MNISTDataset(torch.utils.data.Dataset):
 
-    def __init__(self, config_file: str = default_config_file, location: str = "cloud",
+    def __init__(self, config: str = default_config_file, location: str = "cloud",
                  train: str = False, transforms: list = [], one_hot: bool = True):
-
-        with open(config_file, "rb") as f:
-            self.config = yaml.load(f, Loader = yaml.FullLoader)
+        if config.endswith("yaml"):
+            with open(config, "rb") as f:
+                self.config = yaml.load(f, Loader = yaml.FullLoader)
+        else:
+            self.config = config
         
         self.root_dir = self.config["root_dir"][location]
         self.download = self.config["download"]
