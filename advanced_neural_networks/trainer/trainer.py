@@ -30,15 +30,15 @@ class MNISTTrainer:
     LOSS_DICT = {"bce": torch.nn.BCEWithLogitsLoss,
                  "cross_entropy": torch.nn.CrossEntropyLoss}
 
-    def __init__(self, config_file: str):
+    def __init__(self, config_file: str, location: str = "cloud"):
         with open(config_file, "rb") as f:
             self.config = yaml.load(f, Loader=yaml.FullLoader)
         
         self.dataset_config = self.config["dataset"]
-        self.model_config = self.config["model"]
+        self.model_config = self.config["model"]["lenet"]
         self.trainer_config = self.config["train_config"]
 
-        self.dataset = MNISTDataset(config = self.dataset_config, location = "local", 
+        self.dataset = MNISTDataset(config = self.dataset_config, location = location, 
                                     train = True, transforms = [],
                                     one_hot = True)
 

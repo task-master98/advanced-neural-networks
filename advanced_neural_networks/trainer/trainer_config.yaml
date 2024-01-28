@@ -1,5 +1,5 @@
 dataset:
-  location:
+  root_dir:
     local: "~/Projects/advanced-neural-networks/data"
     cloud: "/home/jupyter-iroy2/advanced-neural-networks/data/"
   train_metadata: "mnist_train_metadata.csv"
@@ -10,8 +10,8 @@ dataset:
     std: 0.3081
 
 model:
-  architecture: "LeNet"
-  input_shape: [1, 1, 28, 28],
+  lenet: "LeNet"
+  input_shape: [1, 1, 28, 28]
   n_conv_blocks: 2
   out_channels_list: [6, 16]
   kernel_size: 5
