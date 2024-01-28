@@ -13,7 +13,7 @@ model:
   lenet:
     input_shape: [1, 1, 28, 28]
     n_conv_blocks: 2
-    out_channels_list: [6, 16]
+    out_channel_list: [6, 16]
     kernel_size: 5
     pool_size: 2
     n_linear_layers: 1
