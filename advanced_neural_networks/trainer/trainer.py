@@ -11,7 +11,7 @@ sys.path.append(os.path.dirname(SCRIPT_DIR))
 import numpy as np
 import pandas as pd
 import torch
-from torch.utils.data import Subset
+from torch.utils.data import Subset, DataLoader
 import yaml
 from tqdm import tqdm
 
@@ -43,12 +43,11 @@ class MNISTTrainer:
                                     one_hot = True)
 
         train_metadata_path = os.path.join(module_dir, "metadata", self.dataset_config["train_metadata"])
-        self.train_metadata_df = pd.read_csv(train_metadata_path)
-        
-        self.model = LeNet(**self.model_config)
+        self.train_metadata_df = pd.read_csv(train_metadata_path)    
 
         self.max_epochs = self.trainer_config["max_epochs"]
         self.learning_rate = self.trainer_config["lr"]
+        self.batch_size = self.trainer_config["batch_size"]
         self.configure_optimizers()
         
     
@@ -59,10 +58,10 @@ class MNISTTrainer:
         loss_type = self.trainer_config["loss"]
         self.criterion = self.LOSS_DICT[loss_type]()
     
-    def train_epoch(self, iterator, device):
+    def train_epoch(self, iterator, model):
         epoch_loss = 0.0
-        
-        self.model.train()
+        device = model.device
+        model.train()
 
         for (x, y) in tqdm(iterator, desc="Training", leave=False):
 
@@ -82,6 +81,27 @@ class MNISTTrainer:
         
         return epoch_loss / len(iterator)
     
+    def evaluate_epoch(self, iterator, model):
+
+        epoch_loss = 0.0
+        device = model.device
+        model.eval()
+
+        with torch.no_grad():            
+            for (x, y) in tqdm(iterator, desc="Evaluating", leave=False):
+
+                x = x.to(device)
+                y = y.to(device)
+
+                y_pred = model(x)
+                loss = self.criterion(y_pred, y)
+
+                epoch_loss += loss.item()
+
+        return epoch_loss / len(iterator)
+
+        
+    
     @staticmethod
     def initialize_folds(kfolds: int):
         fold_array = np.arange(kfolds)
@@ -90,10 +110,57 @@ class MNISTTrainer:
             train_folds = fold_array[fold_array != fold]
             val_fold = np.array([fold])
 
-            fold_dict = {"train": train_folds, "val_fold": val_fold}
+            fold_dict = {"train": train_folds, "val": val_fold}
             fold_indices[f"fold_{fold}"] = fold_dict
         
         return fold_indices
+    
+    def cross_validate(self, kfolds: int):
+
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')        
+
+        fold_dict = self.initialize_folds(kfolds)
+        metrics_df = pd.DataFrame()
+        best_valid_loss = {fold_idx: float("inf") for fold_idx in fold_dict}
+
+        for fold_idx in tqdm(fold_dict, desc = "Cross Validation", leave = False):
+            
+            fold_info = fold_dict[fold_idx]
+            val_fold_idx = fold_info["val"][0]
+
+            train_indices = self.train_metadata_df.loc[self.train_metadata_df["fold"] != val_fold_idx]
+            val_indices = self.train_metadata_df.loc[self.train_metadata_df["fold"] == val_fold_idx]
+
+            train_dataset = Subset(self.dataset, train_indices)
+            val_dataset = Subset(self.dataset, val_indices)
+
+            train_iterator = DataLoader(train_dataset,
+                                        batch_size = self.batch_size,
+                                        shuffle = True)
+            val_iterator = DataLoader(val_dataset,
+                                      batch_size = self.batch_size)
+
+            model = LeNet(**self.model_config)
+            model = model.to(device)
+            self.criterion = self.criterion.to(device)
+
+            for epoch in range(self.max_epochs):
+
+                train_loss = self.train_epoch(train_iterator, model)
+                val_loss = self.evaluate_epoch(val_iterator, model)
+
+                metrics = {"train_loss": train_loss,
+                           "val_loss": val_loss,
+                           "epoch": epoch,
+                           "fold": fold_idx}
+                
+                metrics_df = pd.concat([metrics_df, pd.DataFrame([metrics])], ignore_index = True)
+
+                if val_loss < best_valid_loss[fold_idx]:
+                    best_valid_loss[fold_idx] = val_loss
+                    torch.save(model.state_dict(), f"best-model-epoch{epoch}-{fold_idx}.pt")
+        
+        return metrics_df
 
 if __name__ == "__main_":
     config_file = os.path.join(module_dir, "trainer", "trainer_config.yaml")
