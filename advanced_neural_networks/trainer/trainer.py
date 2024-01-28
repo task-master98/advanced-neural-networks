@@ -48,29 +48,28 @@ class MNISTTrainer:
         self.max_epochs = self.trainer_config["max_epochs"]
         self.learning_rate = self.trainer_config["lr"]
         self.batch_size = self.trainer_config["batch_size"]
-        self.configure_optimizers()
+        # self.configure_optimizers()
         
     
-    def configure_optimizers(self):
+    def configure_optimizers(self, model):
         optimizer_type = self.trainer_config["optimizer"]
-        self.optimizer = self.OPTIMIZER_DICT[optimizer_type](self.model.parameters(),
+        self.optimizer = self.OPTIMIZER_DICT[optimizer_type](model.parameters(),
                                              lr = self.learning_rate)
         loss_type = self.trainer_config["loss"]
         self.criterion = self.LOSS_DICT[loss_type]()
     
-    def train_epoch(self, iterator, model):
-        epoch_loss = 0.0
-        device = model.device
+    def train_epoch(self, iterator, model, device):
+        epoch_loss = 0.0        
         model.train()
 
         for (x, y) in tqdm(iterator, desc="Training", leave=False):
 
             x = x.to(device)
-            y = y.to(device)
-
+            y = y.squeeze().to(device)
+            
             self.optimizer.zero_grad()
 
-            y_pred = self.model(x)
+            y_pred = model(x)
 
             loss = self.criterion(y_pred, y)
 
@@ -81,17 +80,16 @@ class MNISTTrainer:
         
         return epoch_loss / len(iterator)
     
-    def evaluate_epoch(self, iterator, model):
+    def evaluate_epoch(self, iterator, model, device):
 
-        epoch_loss = 0.0
-        device = model.device
+        epoch_loss = 0.0        
         model.eval()
 
         with torch.no_grad():            
             for (x, y) in tqdm(iterator, desc="Evaluating", leave=False):
 
                 x = x.to(device)
-                y = y.to(device)
+                y = y.squeeze().to(device)
 
                 y_pred = model(x)
                 loss = self.criterion(y_pred, y)
@@ -128,8 +126,8 @@ class MNISTTrainer:
             fold_info = fold_dict[fold_idx]
             val_fold_idx = fold_info["val"][0]
 
-            train_indices = self.train_metadata_df.loc[self.train_metadata_df["fold"] != val_fold_idx]
-            val_indices = self.train_metadata_df.loc[self.train_metadata_df["fold"] == val_fold_idx]
+            train_indices = self.train_metadata_df.loc[self.train_metadata_df["fold"] != val_fold_idx].index.to_numpy()
+            val_indices = self.train_metadata_df.loc[self.train_metadata_df["fold"] == val_fold_idx].index.to_numpy()
 
             train_dataset = Subset(self.dataset, train_indices)
             val_dataset = Subset(self.dataset, val_indices)
@@ -142,12 +140,13 @@ class MNISTTrainer:
 
             model = LeNet(**self.model_config)
             model = model.to(device)
+            self.configure_optimizers(model)
             self.criterion = self.criterion.to(device)
 
             for epoch in range(self.max_epochs):
 
-                train_loss = self.train_epoch(train_iterator, model)
-                val_loss = self.evaluate_epoch(val_iterator, model)
+                train_loss = self.train_epoch(train_iterator, model, device)
+                val_loss = self.evaluate_epoch(val_iterator, model, device)
 
                 metrics = {"train_loss": train_loss,
                            "val_loss": val_loss,
@@ -158,7 +157,7 @@ class MNISTTrainer:
 
                 if val_loss < best_valid_loss[fold_idx]:
                     best_valid_loss[fold_idx] = val_loss
-                    torch.save(model.state_dict(), f"best-model-epoch{epoch}-{fold_idx}.pt")
+                    torch.save(model.state_dict(), f"best-model-{fold_idx}.pt")
         
         return metrics_df
 
