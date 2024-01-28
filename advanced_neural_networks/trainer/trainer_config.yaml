@@ -10,14 +10,14 @@ dataset:
     std: 0.3081
 
 model:
-  lenet: "LeNet"
-  input_shape: [1, 1, 28, 28]
-  n_conv_blocks: 2
-  out_channels_list: [6, 16]
-  kernel_size: 5
-  pool_size: 2
-  n_linear_layers: 1
-  n_neurons_list: [10]
+  lenet:
+    input_shape: [1, 1, 28, 28]
+    n_conv_blocks: 2
+    out_channels_list: [6, 16]
+    kernel_size: 5
+    pool_size: 2
+    n_linear_layers: 1
+    n_neurons_list: [10]
 
 train_config:
   lr: 0.0002
