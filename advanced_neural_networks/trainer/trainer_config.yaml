@@ -22,5 +22,6 @@ model:
 train_config:
   lr: 0.0002
   max_epochs: 20
+  batch_size: 32
   optimizer: "adam"
   loss: "bce"
