@@ -8,6 +8,7 @@ dataset:
   dataset_statistics:
     mean: 0.1307
     std: 0.3081
+  kfolds: 10
 
 model:
   lenet:
