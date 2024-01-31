@@ -14,7 +14,7 @@ import pandas as pd
 import torch
 from torch.utils.data import Subset, DataLoader
 import yaml
-from tqdm import tqdm
+from tqdm import tqdm, tqdm_notebook
 
 import advanced_neural_networks
 from advanced_neural_networks.dataloader.mnist import MNISTDataset
@@ -63,7 +63,7 @@ class MNISTTrainer:
         epoch_loss = 0.0        
         model.train()
 
-        for (x, y) in tqdm(iterator, desc="Training", leave=False):
+        for (x, y) in tqdm_notebook(iterator, desc="Training", leave=False):
 
             x = x.to(device)
             y = y.squeeze().to(device)
@@ -87,7 +87,7 @@ class MNISTTrainer:
         model.eval()
 
         with torch.no_grad():            
-            for (x, y) in tqdm(iterator, desc="Evaluating", leave=False):
+            for (x, y) in tqdm_notebook(iterator, desc="Evaluating", leave=False):
 
                 x = x.to(device)
                 y = y.squeeze().to(device)
@@ -122,7 +122,7 @@ class MNISTTrainer:
         metrics_df = pd.DataFrame()
         best_valid_loss = {fold_idx: float("inf") for fold_idx in fold_dict}
 
-        for fold_idx in tqdm(fold_dict, desc = "Cross Validation", leave = False):
+        for fold_idx in tqdm_notebook(fold_dict, desc = "Cross Validation", leave = False):
             
             fold_info = fold_dict[fold_idx]
             val_fold_idx = fold_info["val"][0]
