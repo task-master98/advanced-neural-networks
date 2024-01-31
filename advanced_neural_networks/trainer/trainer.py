@@ -55,7 +55,7 @@ class MNISTTrainer:
     
     def configure_optimizers(self, model, optimizer_type: str, lr: float):        
         
-        self.optimizer = getattr(torch.optim, optimizer_type)(self.model.parameters(), lr = lr)
+        self.optimizer = getattr(torch.optim, optimizer_type)(model.parameters(), lr = lr)
         loss_type = self.trainer_config["loss"]
         self.criterion = self.LOSS_DICT[loss_type]()
     
