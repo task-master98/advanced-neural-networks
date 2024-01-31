@@ -1,11 +1,12 @@
 """
 File contains: Trainer class that contains the main training pipeline
+#TODO:
+-> include test to check if there is overlap between train and validation folds
 """
 import sys
 import os
 
 SCRIPT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-print(SCRIPT_DIR)
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
 import numpy as np
@@ -34,8 +35,7 @@ class MNISTTrainer:
         with open(config_file, "rb") as f:
             self.config = yaml.load(f, Loader=yaml.FullLoader)
         
-        self.dataset_config = self.config["dataset"]
-        self.model_config = self.config["model"]["lenet"]
+        self.dataset_config = self.config["dataset"]        
         self.trainer_config = self.config["train_config"]
 
         self.dataset = MNISTDataset(config = self.dataset_config, location = location, 
@@ -43,18 +43,19 @@ class MNISTTrainer:
                                     one_hot = True)
 
         train_metadata_path = os.path.join(module_dir, "metadata", self.dataset_config["train_metadata"])
-        self.train_metadata_df = pd.read_csv(train_metadata_path)    
+        self.train_metadata_df = pd.read_csv(train_metadata_path)
+        self.kfolds = self.dataset_config["kfolds"]    
 
         self.max_epochs = self.trainer_config["max_epochs"]
         self.learning_rate = self.trainer_config["lr"]
         self.batch_size = self.trainer_config["batch_size"]
-        # self.configure_optimizers()
-        
+        self.model = None
+        # self.configure_optimizers()    
     
-    def configure_optimizers(self, model):
-        optimizer_type = self.trainer_config["optimizer"]
-        self.optimizer = self.OPTIMIZER_DICT[optimizer_type](model.parameters(),
-                                             lr = self.learning_rate)
+    
+    def configure_optimizers(self, model, optimizer_type: str, lr: float):        
+        
+        self.optimizer = getattr(torch.optim, optimizer_type)(self.model.parameters(), lr = lr)
         loss_type = self.trainer_config["loss"]
         self.criterion = self.LOSS_DICT[loss_type]()
     
@@ -113,11 +114,11 @@ class MNISTTrainer:
         
         return fold_indices
     
-    def cross_validate(self, kfolds: int):
+    def cross_validate(self, model, optimizer_params: dict):
 
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')        
 
-        fold_dict = self.initialize_folds(kfolds)
+        fold_dict = self.initialize_folds(self.kfolds)
         metrics_df = pd.DataFrame()
         best_valid_loss = {fold_idx: float("inf") for fold_idx in fold_dict}
 
@@ -138,9 +139,9 @@ class MNISTTrainer:
             val_iterator = DataLoader(val_dataset,
                                       batch_size = self.batch_size)
 
-            model = LeNet(**self.model_config)
+            
             model = model.to(device)
-            self.configure_optimizers(model)
+            self.configure_optimizers(model, **optimizer_params)
             self.criterion = self.criterion.to(device)
 
             for epoch in range(self.max_epochs):
