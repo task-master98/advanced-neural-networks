@@ -48,7 +48,7 @@ def objective(trial: optuna.Trial):
                   n_neurons_list = n_neurons_list)
     
     # define optimizers
-    optimizer_type = trial.suggest_categorical("optimizer", ["Adam", "SGD", "RMSProp"])
+    optimizer_type = trial.suggest_categorical("optimizer", ["Adam", "SGD", "RMSprop"])
     learning_rate = trial.suggest_float("lr", 1e-5, 1e-1, log = True)
     optimizer_params = {"optimizer_type": optimizer_type, "lr": learning_rate}    
 
