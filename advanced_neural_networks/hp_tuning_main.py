@@ -76,6 +76,9 @@ def objective(trial: optuna.Trial):
 
     best_metrics = get_best_metrics(metrics_df)
 
+    # set model parameters in trial
+    trial.set_user_attr("best_model", value = model)
+
     return best_metrics["val_loss"], best_metrics["val_acc"]
 
     
