@@ -107,9 +107,11 @@ class MNISTTrainer:
     
     @staticmethod
     def calculate_accuracy(y_pred, y):
-        top_pred = y_pred.argmax(1, keepdim=True)
-        correct = top_pred.eq(y.view_as(top_pred)).sum()
-        acc = correct.float() / y.shape[0]
+        top_pred = torch.argmax(y_pred, dim = 1)
+        label = torch.argmax(y, dim = 1)
+        correct = torch.sum(top_pred == label)
+        total_samples = len(label)
+        acc = correct.item() / total_samples
         return acc
     
     @staticmethod
