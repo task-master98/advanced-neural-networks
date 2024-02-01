@@ -80,7 +80,7 @@ class MNISTTrainer:
             self.optimizer.step()
 
             epoch_loss += loss.item()
-            epoch_acc += acc.item()
+            epoch_acc += acc
         
         return epoch_loss / len(iterator), epoch_acc / len(iterator)
     
@@ -101,7 +101,7 @@ class MNISTTrainer:
                 acc = self.calculate_accuracy(y_pred, y)
 
                 epoch_loss += loss.item()
-                epoch_acc += acc.item()
+                epoch_acc += acc
 
         return epoch_loss / len(iterator), epoch_acc / len(iterator)
     
