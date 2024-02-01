@@ -13,18 +13,32 @@ import torch
 import torch.nn as nn
 import optuna
 from optuna.trial import TrialState
+import datetime
 
 import advanced_neural_networks
 from advanced_neural_networks.models.lenet import LeNet
 from advanced_neural_networks.trainer.trainer import MNISTTrainer
 
 module_dir = advanced_neural_networks.__path__[0]
+results_dir = os.path.join(module_dir, "results")
+if not os.path.exists(results_dir):
+    os.makedirs(results_dir)
 trainer_config = os.path.join(module_dir, "trainer", "trainer_config.yaml")
 
 def get_best_metrics(metrics_df: pd.DataFrame):
     sorted_metrics = metrics_df.sort_values("val_loss")
     best_metrics = sorted_metrics.iloc[0].to_dict()
     return best_metrics
+
+def save_metrics_df(metrics_df: pd.DataFrame, trial_datetime: datetime.datetime, trial_number: int):
+    datetime_string = trial_datetime.strftime("%Y%m%d")
+    res_path = os.path.join(results_dir, datetime_string)
+    if not os.path.exists(res_path):
+        os.makedirs(res_path)
+    
+    csv_path = os.path.join(res_path, f"optuna_trial_{trial_number}.csv")
+    metrics_df.to_csv(csv_path, index = False)
+    
 
 def objective(trial: optuna.Trial):
 
@@ -56,6 +70,9 @@ def objective(trial: optuna.Trial):
     mnist_trainer = MNISTTrainer(config_file = trainer_config, location = "cloud")    
 
     metrics_df = mnist_trainer.cross_validate(model, optimizer_params)
+    start_date = trial.datetime_start
+    metrics_df["optuna_trial"] = trial.number
+    save_metrics_df(metrics_df, start_date, trial.number)
 
     best_metrics = get_best_metrics(metrics_df)
 
