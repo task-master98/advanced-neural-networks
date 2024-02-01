@@ -60,7 +60,8 @@ class MNISTTrainer:
         self.criterion = self.LOSS_DICT[loss_type]()
     
     def train_epoch(self, iterator, model, device):
-        epoch_loss = 0.0        
+        epoch_loss = 0.0
+        epoch_acc = 0.0        
         model.train()
 
         for (x, y) in tqdm_notebook(iterator, desc="Training", leave=False):
@@ -73,17 +74,20 @@ class MNISTTrainer:
             y_pred = model(x)
 
             loss = self.criterion(y_pred, y)
+            acc = self.calculate_accuracy(y_pred, y)
 
             loss.backward()
             self.optimizer.step()
 
             epoch_loss += loss.item()
+            epoch_acc += acc.item()
         
-        return epoch_loss / len(iterator)
+        return epoch_loss / len(iterator), epoch_acc / len(iterator)
     
     def evaluate_epoch(self, iterator, model, device):
 
-        epoch_loss = 0.0        
+        epoch_loss = 0.0
+        epoch_acc = 0.0        
         model.eval()
 
         with torch.no_grad():            
@@ -94,12 +98,19 @@ class MNISTTrainer:
 
                 y_pred = model(x)
                 loss = self.criterion(y_pred, y)
+                acc = self.calculate_accuracy(y_pred, y)
 
                 epoch_loss += loss.item()
+                epoch_acc += acc.item()
 
-        return epoch_loss / len(iterator)
-
-        
+        return epoch_loss / len(iterator), epoch_acc / len(iterator)
+    
+    @staticmethod
+    def calculate_accuracy(y_pred, y):
+        top_pred = y_pred.argmax(1, keepdim=True)
+        correct = top_pred.eq(y.view_as(top_pred)).sum()
+        acc = correct.float() / y.shape[0]
+        return acc
     
     @staticmethod
     def initialize_folds(kfolds: int):
@@ -146,11 +157,13 @@ class MNISTTrainer:
 
             for epoch in range(self.max_epochs):
 
-                train_loss = self.train_epoch(train_iterator, model, device)
-                val_loss = self.evaluate_epoch(val_iterator, model, device)
+                train_loss, train_acc = self.train_epoch(train_iterator, model, device)
+                val_loss, val_acc = self.evaluate_epoch(val_iterator, model, device)
 
                 metrics = {"train_loss": train_loss,
                            "val_loss": val_loss,
+                           "train_acc": train_acc,
+                           "val_acc": val_acc,
                            "epoch": epoch,
                            "fold": fold_idx}
                 
