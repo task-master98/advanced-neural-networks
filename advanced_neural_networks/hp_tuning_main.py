@@ -76,7 +76,7 @@ def objective(trial: optuna.Trial):
 
     best_metrics = get_best_metrics(metrics_df)
 
-    return best_metrics["val_loss"]
+    return best_metrics["val_loss"], best_metrics["val_acc"]
 
     
 
