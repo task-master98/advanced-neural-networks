@@ -79,7 +79,7 @@ def objective(trial: optuna.Trial):
     # set model parameters in trial
     trial.set_user_attr("best_model", value = model)
 
-    return best_metrics["val_loss"], best_metrics["val_acc"]
+    return best_metrics["val_acc"]
 
     
 
