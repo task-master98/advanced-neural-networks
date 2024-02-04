@@ -55,13 +55,13 @@ def objective(trial: optuna.Trial):
     n_neurons_list.append(10)
     n_linear_layers += 1
 
-    model = LeNet(input_shape = input_shape,
-                  n_conv_blocks = num_conv_layers,
-                  out_channel_list = out_channels_list,
-                  kernel_size = kernel_size,
-                  pool_size = pool_size,
-                  n_linear_layers = n_linear_layers,
-                  n_neurons_list = n_neurons_list)
+    model_params = {"input_shape": input_shape,
+                    "n_conv_blocks": num_conv_layers,
+                    "out_channel_list": out_channels_list,
+                    "kernel_size": kernel_size,
+                    "pool_size": pool_size,
+                    "n_linear_layers": n_linear_layers,
+                    "n_neurons_list": n_neurons_list}
     
     # define optimizers
     optimizer_type = trial.suggest_categorical("optimizer", ["Adam", "SGD", "RMSprop"])
@@ -71,7 +71,7 @@ def objective(trial: optuna.Trial):
     # intialize trainer
     mnist_trainer = MNISTTrainer(config_file = trainer_config, location = "cloud")    
 
-    metrics_df = mnist_trainer.cross_validate(model, optimizer_params)
+    metrics_df = mnist_trainer.cross_validate(model_params, optimizer_params)
     start_date = trial.datetime_start
     metrics_df["optuna_trial"] = trial.number
     save_metrics_df(metrics_df, start_date, trial.number)

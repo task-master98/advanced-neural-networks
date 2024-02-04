@@ -127,7 +127,7 @@ class MNISTTrainer:
         
         return fold_indices
     
-    def cross_validate(self, model, optimizer_params: dict):
+    def cross_validate(self, model_params: dict, optimizer_params: dict):
 
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')        
 
@@ -152,7 +152,7 @@ class MNISTTrainer:
             val_iterator = DataLoader(val_dataset,
                                       batch_size = self.batch_size)
 
-            
+            model = LeNet(**model_params)
             model = model.to(device)
             self.configure_optimizers(model, **optimizer_params)
             self.criterion = self.criterion.to(device)
