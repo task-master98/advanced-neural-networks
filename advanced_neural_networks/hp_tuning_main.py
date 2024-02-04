@@ -45,11 +45,13 @@ def objective(trial: optuna.Trial):
     # define model hyperparams
     input_shape = [1, 1, 28, 28]
     num_conv_layers = trial.suggest_int("num_conv_layers", 2, 3)
-    out_channels_list = [int(trial.suggest_discrete_uniform("num_filters", 6, 32, 6)) for _ in range(num_conv_layers)]
+    out_channels_list = [int(trial.suggest_float("num_filter_"+str(i), 16, 64, step=16))
+                   for i in range(num_conv_layers)] 
+    out_channels_list = sorted(out_channels_list)
     kernel_size = 3
-    pool_size = trial.suggest_int("pool_size", 1, 2)
-    n_linear_layers = trial.suggest_int("n_linear_layers", 1, 2)
-    n_neurons_list = [int(trial.suggest_discrete_uniform("n_neurons", 50, 100, 10)) for _ in range(n_linear_layers)]
+    pool_size = 2
+    n_linear_layers = trial.suggest_int("n_linear_layers", 0, 1)
+    n_neurons_list = [int(trial.suggest_float("n_neurons", 50, 100, step=10)) for _ in range(n_linear_layers)]
     n_neurons_list.append(10)
     n_linear_layers += 1
 
@@ -81,7 +83,10 @@ def objective(trial: optuna.Trial):
 
     return best_metrics["val_acc"]
 
-    
+if __name__ == "__main__":
+    study = optuna.create_study(direction = "maximize")
+    number_of_trials = 1
+    study.optimize(objective, n_trials=number_of_trials)    
 
 
    
