@@ -26,9 +26,14 @@ if not os.path.exists(results_dir):
 trainer_config = os.path.join(module_dir, "trainer", "trainer_config.yaml")
 
 def get_best_metrics(metrics_df: pd.DataFrame):
-    sorted_metrics = metrics_df.sort_values("val_loss")
-    best_metrics = sorted_metrics.iloc[0].to_dict()
-    return best_metrics
+    n_epochs = len(metrics_df.loc[metrics_df["fold"] == "fold_0"])
+    last_epoch_df = metrics_df.loc[metrics_df["epoch"] == n_epochs - 1]
+    mean_val_acc = last_epoch_df["val_acc"].mean()
+    std_val_acc = last_epoch_df["val_acc"].std()
+
+    return mean_val_acc, std_val_acc
+    
+    
 
 def save_metrics_df(metrics_df: pd.DataFrame, trial_datetime: datetime.datetime, trial_number: int):
     datetime_string = trial_datetime.strftime("%Y%m%d")
@@ -76,12 +81,12 @@ def objective(trial: optuna.Trial):
     metrics_df["optuna_trial"] = trial.number
     save_metrics_df(metrics_df, start_date, trial.number)
 
-    best_metrics = get_best_metrics(metrics_df)
+    mean_val_acc, std_val_acc = get_best_metrics(metrics_df)
 
     # set model parameters in trial
-    trial.set_user_attr("best_model", value = model)
+    # trial.set_user_attr("best_model", value = model)
 
-    return best_metrics["val_acc"]
+    return mean_val_acc, std_val_acc
 
 if __name__ == "__main__":
     study = optuna.create_study(direction = "maximize")
