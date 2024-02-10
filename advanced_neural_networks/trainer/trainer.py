@@ -31,7 +31,7 @@ class MNISTTrainer:
     LOSS_DICT = {"bce": torch.nn.BCEWithLogitsLoss,
                  "cross_entropy": torch.nn.CrossEntropyLoss}
 
-    def __init__(self, config_file: str, location: str = "cloud"):
+    def __init__(self, config_file: str, location: str = "cloud", data_type: str = "MNIST"):
         with open(config_file, "rb") as f:
             self.config = yaml.load(f, Loader=yaml.FullLoader)
         
@@ -40,9 +40,13 @@ class MNISTTrainer:
 
         self.dataset = MNISTDataset(config = self.dataset_config, location = location, 
                                     train = True, transforms = [],
-                                    one_hot = True)
+                                    one_hot = True,
+                                    data_type = data_type)
 
-        train_metadata_path = os.path.join(module_dir, "metadata", self.dataset_config["train_metadata"])
+        data_prefix = "mnist" if data_type == "MNIST" else "fashion_mnist"
+        train_metadata_suffix = self.dataset_config["train_metadata"]
+        train_metadata_filename = f"{data_prefix}_{train_metadata_suffix}"
+        train_metadata_path = os.path.join(module_dir, "metadata", train_metadata_filename)
         self.train_metadata_df = pd.read_csv(train_metadata_path)
         self.kfolds = self.dataset_config["kfolds"]    
 
