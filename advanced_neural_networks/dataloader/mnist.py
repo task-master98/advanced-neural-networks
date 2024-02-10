@@ -18,7 +18,8 @@ default_config_file = "mnist_config.yaml"
 class MNISTDataset(torch.utils.data.Dataset):
 
     def __init__(self, config: str = default_config_file, location: str = "cloud",
-                 train: str = False, transforms: list = [], one_hot: bool = True):
+                 train: str = False, transforms: list = [], one_hot: bool = True,
+                 data_type: str = "MIST"):
         if not isinstance(config, dict):
             with open(config, "rb") as f:
                 self.config = yaml.load(f, Loader = yaml.FullLoader)
@@ -30,7 +31,8 @@ class MNISTDataset(torch.utils.data.Dataset):
         if not os.path.isdir(self.root_dir):
             self.download = False
         
-        self.dataset_statistics = self.config["dataset_statistics"]
+        self.data_type = data_type
+        self.dataset_statistics = self.config[data_type]["dataset_statistics"]
         self.dataset_mean = self.dataset_statistics["mean"]
         self.dataset_std = self.dataset_statistics["std"]
         
@@ -42,10 +44,16 @@ class MNISTDataset(torch.utils.data.Dataset):
         transforms.append(normalize_transform)
         self.transforms = torchvision.transforms.Compose(transforms)
 
-        self.dataset = torchvision.datasets.MNIST(root = self.root_dir,
-                                                  train = train,
-                                                  transform = self.transforms,
-                                                  download = self.download)
+        if self.data_type == "MNIST":
+            self.dataset = torchvision.datasets.MNIST(root = self.root_dir,
+                                                    train = train,
+                                                    transform = self.transforms,
+                                                    download = self.download)
+        else:
+            self.dataset = torchvision.datasets.FashionMNIST(root = self.root_dir,
+                                                    train = train,
+                                                    transform = self.transforms,
+                                                    download = self.download)
         self.one_hot = one_hot
     
     def __getitem__(self, idx):
@@ -62,6 +70,6 @@ class MNISTDataset(torch.utils.data.Dataset):
 
 if __name__ == "__main__":
 
-    mnist_dataset = MNISTDataset(location="local", one_hot=False)
+    mnist_dataset = MNISTDataset(location="local", one_hot=False, data_type="FashionMNIST")
     img, label = mnist_dataset[0]
     print(label)

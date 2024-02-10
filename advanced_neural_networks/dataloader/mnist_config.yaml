@@ -2,6 +2,11 @@ root_dir:
     local: "~/Projects/advanced-neural-networks/data"
     cloud: "/home/jupyter-iroy2/advanced-neural-networks/data/"
 download: True
-dataset_statistics:
-  mean: 0.1307
-  std: 0.3081
+MNIST:
+  dataset_statistics:
+    mean: 0.1307
+    std: 0.3081
+FashionMNIST:
+  dataset_statistics:
+      mean: 0.5
+      std: 0.5
