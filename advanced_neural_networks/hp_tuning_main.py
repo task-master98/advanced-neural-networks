@@ -45,7 +45,7 @@ def save_metrics_df(metrics_df: pd.DataFrame, trial_datetime: datetime.datetime,
     metrics_df.to_csv(csv_path, index = False)
     
 
-def objective(trial: optuna.Trial):
+def objective(trial: optuna.Trial, data_type: str):
 
     # define model hyperparams
     input_shape = [1, 1, 28, 28]
@@ -74,7 +74,7 @@ def objective(trial: optuna.Trial):
     optimizer_params = {"optimizer_type": optimizer_type, "lr": learning_rate}    
 
     # intialize trainer
-    mnist_trainer = MNISTTrainer(config_file = trainer_config, location = "cloud")    
+    mnist_trainer = MNISTTrainer(config_file = trainer_config, location = "cloud", data_type = data_type)    
 
     metrics_df = mnist_trainer.cross_validate(model_params, optimizer_params)
     start_date = trial.datetime_start
