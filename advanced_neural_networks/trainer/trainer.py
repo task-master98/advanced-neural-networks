@@ -122,6 +122,42 @@ class MNISTTrainer:
         acc = correct.item() / total_samples
         return acc
     
+    def train(self, model_params: dict, optimizer_params: dict,
+              train_dataset: torch.utils.data.Dataset,
+              val_dataset: torch.utils.data.Dataset):
+
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')        
+
+        fold_dict = self.initialize_folds(self.kfolds)
+        metrics_df = pd.DataFrame()
+
+        train_iterator = DataLoader(train_dataset,
+                                    batch_size = self.batch_size,
+                                    shuffle = True)
+        val_iterator = DataLoader(val_dataset,
+                                  batch_size = self.batch_size)
+        
+        model = LeNet(**model_params)
+        self.configure_optimizers(model, **optimizer_params)
+        self.criterion = self.criterion.to(device)
+
+
+        for epoch in range(self.max_epochs):
+
+            train_loss, train_acc = self.train_epoch(train_iterator, model, device)
+            val_loss, val_acc = self.evaluate_epoch(val_iterator, model, device)
+
+            metrics = {"train_loss": train_loss,
+                        "val_loss": val_loss,
+                        "train_acc": train_acc,
+                        "val_acc": val_acc,
+                        "epoch": epoch,
+                        "fold": fold_idx}
+            
+            metrics_df = pd.concat([metrics_df, pd.DataFrame([metrics])], ignore_index = True)
+
+        return metrics_df
+    
     @staticmethod
     def initialize_folds(kfolds: int):
         fold_array = np.arange(kfolds)
