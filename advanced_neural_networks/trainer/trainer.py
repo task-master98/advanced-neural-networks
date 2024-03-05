@@ -156,7 +156,7 @@ class MNISTTrainer:
             
             metrics_df = pd.concat([metrics_df, pd.DataFrame([metrics])], ignore_index = True)
 
-        return metrics_df
+        return metrics_df, model
     
     @staticmethod
     def initialize_folds(kfolds: int):
