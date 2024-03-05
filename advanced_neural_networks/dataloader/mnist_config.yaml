@@ -10,3 +10,8 @@ FashionMNIST:
   dataset_statistics:
       mean: 0.5
       std: 0.5
+CIFAR10:
+  dataset_statistics:
+    mean: 0.5
+    std: 0.5
+
