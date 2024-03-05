@@ -30,6 +30,10 @@ class MNISTTrainer:
 
     LOSS_DICT = {"bce": torch.nn.BCEWithLogitsLoss,
                  "cross_entropy": torch.nn.CrossEntropyLoss}
+    
+    DATA_PREFIX = {"MNIST": "mnist",
+                   "FashionMNIST": "fashion_mnist",
+                   "CIFAR10": "cifar10"}
 
     def __init__(self, config_file: str, location: str = "cloud", data_type: str = "MNIST"):
         with open(config_file, "rb") as f:
@@ -43,7 +47,7 @@ class MNISTTrainer:
                                     one_hot = True,
                                     data_type = data_type)
 
-        data_prefix = "mnist" if data_type == "MNIST" else "fashion_mnist"
+        data_prefix = self.DATA_PREFIX[data_type]
         train_metadata_suffix = self.dataset_config["train_metadata"]
         train_metadata_filename = f"{data_prefix}_{train_metadata_suffix}"
         train_metadata_path = os.path.join(module_dir, "metadata", train_metadata_filename)
