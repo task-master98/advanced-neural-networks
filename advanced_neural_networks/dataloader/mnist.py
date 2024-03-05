@@ -49,11 +49,18 @@ class MNISTDataset(torch.utils.data.Dataset):
                                                     train = train,
                                                     transform = self.transforms,
                                                     download = self.download)
-        else:
+        elif self.data_type == "FashionMNIST":
             self.dataset = torchvision.datasets.FashionMNIST(root = self.root_dir,
                                                     train = train,
                                                     transform = self.transforms,
                                                     download = self.download)
+        elif self.data_type == "CIFAR10":
+            self.dataset = torchvision.datasets.CIFAR10(root = self.root_dir,
+                                                        train = train,
+                                                        transform = self.transforms,
+                                                        download = self.download)
+        else:
+            raise NotImplementedError("Dataset has not been implemented")
         self.one_hot = one_hot
     
     def __getitem__(self, idx):
