@@ -37,8 +37,8 @@ class MNISTDataset(torch.utils.data.Dataset):
         self.dataset_std = self.dataset_statistics["std"]
         
         tensor_transform = torchvision.transforms.ToTensor()
-        normalize_transform = torchvision.transforms.Normalize((self.dataset_mean,),
-                                                               (self.dataset_std,))
+        normalize_transform = torchvision.transforms.Normalize((*self.dataset_mean,),
+                                                               (*self.dataset_std,))
 
         transforms.append(tensor_transform)
         transforms.append(normalize_transform)
@@ -77,6 +77,6 @@ class MNISTDataset(torch.utils.data.Dataset):
 
 if __name__ == "__main__":
 
-    mnist_dataset = MNISTDataset(location="local", one_hot=False, data_type="FashionMNIST")
+    mnist_dataset = MNISTDataset(location="local", one_hot=False, data_type="MNIST")
     img, label = mnist_dataset[0]
     print(label)

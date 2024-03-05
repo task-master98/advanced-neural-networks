@@ -4,14 +4,14 @@ root_dir:
 download: True
 MNIST:
   dataset_statistics:
-    mean: 0.1307
-    std: 0.3081
+    mean: [0.1307]
+    std: [0.3081]
 FashionMNIST:
   dataset_statistics:
-      mean: 0.5
-      std: 0.5
+      mean: [0.5]
+      std: [0.5]
 CIFAR10:
   dataset_statistics:
-    mean: 0.5
-    std: 0.5
+    mean: [0.49139968, 0.48215827, 0.44653124]
+    std: [0.24703233, 0.24348505, 0.26158768]
 
