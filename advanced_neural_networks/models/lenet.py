@@ -22,9 +22,8 @@ class LeNet(nn.Module):
         self.out_channels_list = out_channel_list
 
         self.conv_blocks = []
-
-        in_channels = 1
-        bs, _, height, width = self.input_shape
+        
+        bs, in_channels, height, width = self.input_shape
         
         for itr in range(self.n_conv_blocks):
             
@@ -100,7 +99,7 @@ class LeNet(nn.Module):
 
 if __name__ == "__main__":
 
-    x = torch.randn(1, 1, 28, 28)
+    x = torch.randn(64, 3, 32, 32)
     n_conv_blocks = 3
     out_channel_list = [2, 8, 16]
     kernel_size = 3
