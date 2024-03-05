@@ -152,8 +152,7 @@ class MNISTTrainer:
                         "val_loss": val_loss,
                         "train_acc": train_acc,
                         "val_acc": val_acc,
-                        "epoch": epoch,
-                        "fold": fold_idx}
+                        "epoch": epoch}
             
             metrics_df = pd.concat([metrics_df, pd.DataFrame([metrics])], ignore_index = True)
 
