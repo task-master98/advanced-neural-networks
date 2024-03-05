@@ -19,7 +19,7 @@ class FeatureExtractor(nn.Module):
             layer.register_forward_hook(self.save_outputs_hook(layer_id))
         
     def save_outputs_hook(self, layer_id: str):
-        def extract(output):
+        def extract(_, _, output):
             self._features[layer_id] = output
         
         return extract
