@@ -1,0 +1,33 @@
+dataset:
+  root_dir:
+    local: "~/Projects/advanced-neural-networks/data"
+    cloud: "/home/jupyter-iroy2/advanced-neural-networks/data/"
+  train_metadata: "train_metadata.csv"
+  test_metadata: "test_metadata.csv"
+  download: True
+  MNIST:
+    dataset_statistics:
+      mean: 0.1307
+      std: 0.3081
+  FashionMNIST:
+    dataset_statistics:
+        mean: 0.5
+        std: 0.5
+  kfolds: 10
+
+model:
+  lenet:
+    input_shape: [1, 1, 28, 28]
+    n_conv_blocks: 2
+    out_channel_list: [6, 16]
+    kernel_size: 5
+    pool_size: 2
+    n_linear_layers: 1
+    n_neurons_list: [10]
+
+train_config:
+  lr: 0.0002
+  max_epochs: 20
+  batch_size: 32
+  optimizer: "adam"
+  loss: "bce"
