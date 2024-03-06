@@ -94,7 +94,9 @@ def objective(trial: optuna.Trial, data_type: str, train_mode: str):
     start_date = trial.datetime_start
     metrics_df["optuna_trial"] = trial.number
     # set model parameters in trial
-    trial.set_user_attr("best_model", value = model.state_dict())
+    model_state_dict = model.state_dict()
+    model_state_dict_numpy = {key: value.numpy() for key, value in model_state_dict.items()}
+    trial.set_user_attr("best_model", value = model_state_dict_numpy)
     save_metrics_df(metrics_df, start_date, trial.number)   
 
     metrics = get_best_metrics(metrics_df, train_mode)
