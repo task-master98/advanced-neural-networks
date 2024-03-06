@@ -25,6 +25,12 @@ if not os.path.exists(results_dir):
     os.makedirs(results_dir)
 trainer_config = os.path.join(module_dir, "trainer", "trainer_config.yaml")
 
+INPUT_SHAPE = {
+    "MNIST": [1, 1, 28, 28],
+    "FashionMNIST": [1, 1, 28, 28],
+    "CIFAR10": [1, 3, 32, 32]
+}
+
 def get_best_metrics(metrics_df: pd.DataFrame, train_mode: str):
     if train_mode == "cross_validate":
         n_epochs = len(metrics_df.loc[metrics_df["fold"] == "fold_0"])
@@ -51,7 +57,7 @@ def save_metrics_df(metrics_df: pd.DataFrame, trial_datetime: datetime.datetime,
 def objective(trial: optuna.Trial, data_type: str, train_mode: str):
 
     # define model hyperparams
-    input_shape = [1, 1, 28, 28]
+    input_shape = INPUT_SHAPE[data_type]
     num_conv_layers = trial.suggest_int("num_conv_layers", 2, 3)
     out_channels_list = [int(trial.suggest_float("num_filter_"+str(i), 16, 64, step=16))
                    for i in range(num_conv_layers)] 
