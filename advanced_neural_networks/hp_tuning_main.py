@@ -25,13 +25,16 @@ if not os.path.exists(results_dir):
     os.makedirs(results_dir)
 trainer_config = os.path.join(module_dir, "trainer", "trainer_config.yaml")
 
-def get_best_metrics(metrics_df: pd.DataFrame):
-    n_epochs = len(metrics_df.loc[metrics_df["fold"] == "fold_0"])
-    last_epoch_df = metrics_df.loc[metrics_df["epoch"] == n_epochs - 1]
-    mean_val_acc = last_epoch_df["val_acc"].mean()
-    std_val_acc = last_epoch_df["val_acc"].std()
-
-    return mean_val_acc, std_val_acc
+def get_best_metrics(metrics_df: pd.DataFrame, train_mode: str):
+    if train_mode == "cross_validate":
+        n_epochs = len(metrics_df.loc[metrics_df["fold"] == "fold_0"])
+        last_epoch_df = metrics_df.loc[metrics_df["epoch"] == n_epochs - 1]
+        mean_val_acc = last_epoch_df["val_acc"].mean()
+        std_val_acc = last_epoch_df["val_acc"].std()
+        return mean_val_acc, std_val_acc
+    elif train_mode == "simple":        
+        last_acc = metrics_df["val_acc"].to_numpy()[-1]
+        return last_acc
     
     
 
@@ -45,7 +48,7 @@ def save_metrics_df(metrics_df: pd.DataFrame, trial_datetime: datetime.datetime,
     metrics_df.to_csv(csv_path, index = False)
     
 
-def objective(trial: optuna.Trial, data_type: str):
+def objective(trial: optuna.Trial, data_type: str, train_mode: str):
 
     # define model hyperparams
     input_shape = [1, 1, 28, 28]
@@ -75,18 +78,22 @@ def objective(trial: optuna.Trial, data_type: str):
 
     # intialize trainer
     mnist_trainer = MNISTTrainer(config_file = trainer_config, location = "cloud", data_type = data_type)    
+    if train_mode == "cross_validate":
+        print(f"Starting Cross Validation...")
+        metrics_df, model = mnist_trainer.cross_validate(model_params, optimizer_params)
+    elif train_mode == "simple":
+        print(f"Starting simple training...")
+        metrics_df, model = mnist_trainer.train(model_params, optimizer_params)
 
-    metrics_df = mnist_trainer.cross_validate(model_params, optimizer_params)
     start_date = trial.datetime_start
     metrics_df["optuna_trial"] = trial.number
-    save_metrics_df(metrics_df, start_date, trial.number)
-
-    mean_val_acc, std_val_acc = get_best_metrics(metrics_df)
-
     # set model parameters in trial
-    # trial.set_user_attr("best_model", value = model)
+    trial.set_user_attr("best_model", value = model)
+    save_metrics_df(metrics_df, start_date, trial.number)   
 
-    return mean_val_acc, std_val_acc
+    metrics = get_best_metrics(metrics_df, train_mode)
+
+    return metrics
 
 if __name__ == "__main__":
     study = optuna.create_study(direction = "maximize")
