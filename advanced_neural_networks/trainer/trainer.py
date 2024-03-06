@@ -19,6 +19,7 @@ from tqdm import tqdm, tqdm_notebook
 import advanced_neural_networks
 from advanced_neural_networks.dataloader.mnist import MNISTDataset
 from advanced_neural_networks.models.lenet import LeNet
+from advanced_neural_networks.trainer.callbacks import EarlyStopping
 
 module_dir = advanced_neural_networks.__path__[0]
 
@@ -44,6 +45,11 @@ class MNISTTrainer:
 
         self.dataset = MNISTDataset(config = self.dataset_config, location = location, 
                                     train = True, transforms = [],
+                                    one_hot = True,
+                                    data_type = data_type)
+        
+        self.val_dataset = MNISTDataset(config = self.dataset_config, location = location, 
+                                    train = False, transforms = [],
                                     one_hot = True,
                                     data_type = data_type)
 
@@ -122,19 +128,14 @@ class MNISTTrainer:
         acc = correct.item() / total_samples
         return acc
     
-    def train(self, model_params: dict, optimizer_params: dict,
-              train_dataset: torch.utils.data.Dataset,
-              val_dataset: torch.utils.data.Dataset):
-
-        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')        
-
-        fold_dict = self.initialize_folds(self.kfolds)
+    def train(self, model_params: dict, optimizer_params: dict):
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')   
         metrics_df = pd.DataFrame()
 
-        train_iterator = DataLoader(train_dataset,
+        train_iterator = DataLoader(self.dataset,
                                     batch_size = self.batch_size,
                                     shuffle = True)
-        val_iterator = DataLoader(val_dataset,
+        val_iterator = DataLoader(self.val_dataset,
                                   batch_size = self.batch_size)
         
         model = LeNet(**model_params)
@@ -142,6 +143,7 @@ class MNISTTrainer:
         self.configure_optimizers(model, **optimizer_params)
         self.criterion = self.criterion.to(device)
 
+        early_stopping = EarlyStopping(patience = 3)
 
         for epoch in range(self.max_epochs):
 
@@ -155,6 +157,10 @@ class MNISTTrainer:
                         "epoch": epoch}
             
             metrics_df = pd.concat([metrics_df, pd.DataFrame([metrics])], ignore_index = True)
+
+            if early_stopping.should_stop(val_loss):
+                print(f"Early stopping at epoch {epoch}, validation loss: {val_loss}")
+                return metrics_df, model
 
         return metrics_df, model
     
@@ -177,7 +183,8 @@ class MNISTTrainer:
 
         fold_dict = self.initialize_folds(self.kfolds)
         metrics_df = pd.DataFrame()
-        best_valid_loss = {fold_idx: float("inf") for fold_idx in fold_dict}
+        best_valid_loss = float("inf")
+        best_model = None
 
         for fold_idx in tqdm_notebook(fold_dict, desc = "Cross Validation", leave = False):
             
@@ -201,6 +208,8 @@ class MNISTTrainer:
             self.configure_optimizers(model, **optimizer_params)
             self.criterion = self.criterion.to(device)
 
+            early_stopping = EarlyStopping(patience = 3)
+
             for epoch in range(self.max_epochs):
 
                 train_loss, train_acc = self.train_epoch(train_iterator, model, device)
@@ -215,11 +224,15 @@ class MNISTTrainer:
                 
                 metrics_df = pd.concat([metrics_df, pd.DataFrame([metrics])], ignore_index = True)
 
-                if val_loss < best_valid_loss[fold_idx]:
-                    best_valid_loss[fold_idx] = val_loss
-                    torch.save(model.state_dict(), f"best-model-{fold_idx}.pt")
+                if early_stopping.should_stop(val_loss):
+                    print(f"Early stopping at epoch {epoch}, validation loss: {val_loss}")
+                    break
+
+                if val_loss < best_valid_loss:
+                    best_valid_loss = val_loss
+                    best_model = model
         
-        return metrics_df
+        return metrics_df, best_model
 
 if __name__ == "__main_":
     config_file = os.path.join(module_dir, "trainer", "trainer_config.yaml")
