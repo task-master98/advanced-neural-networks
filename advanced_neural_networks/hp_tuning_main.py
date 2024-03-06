@@ -14,6 +14,7 @@ import torch.nn as nn
 import optuna
 from optuna.trial import TrialState
 import datetime
+import json
 
 import advanced_neural_networks
 from advanced_neural_networks.models.lenet import LeNet
@@ -30,6 +31,12 @@ INPUT_SHAPE = {
     "FashionMNIST": [1, 1, 28, 28],
     "CIFAR10": [1, 3, 32, 32]
 }
+
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return json.JSONEncoder.default(self, obj)
 
 def get_best_metrics(metrics_df: pd.DataFrame, train_mode: str):
     if train_mode == "cross_validate":
@@ -96,7 +103,7 @@ def objective(trial: optuna.Trial, data_type: str, train_mode: str):
     # set model parameters in trial
     model_state_dict = model.state_dict()
     model_state_dict_numpy = {key: value.detach().cpu().numpy() for key, value in model_state_dict.items()}
-    trial.set_user_attr("best_model", value = model_state_dict_numpy)
+    trial.set_user_attr("best_model", value = json.dumps(model_state_dict_numpy, cls=NumpyEncoder))
     save_metrics_df(metrics_df, start_date, trial.number)   
 
     metrics = get_best_metrics(metrics_df, train_mode)
