@@ -14,7 +14,8 @@ class LeNet(nn.Module):
 
     def __init__(self, input_shape: tuple, n_conv_blocks: int, out_channel_list: list,
                  kernel_size: int, pool_size: int, n_linear_layers: int,
-                 n_neurons_list: list):
+                 n_neurons_list: list,
+                 dropout_prob: list):
         super().__init__()
        
         self.input_shape = input_shape
@@ -30,12 +31,22 @@ class LeNet(nn.Module):
             out_channels = self.out_channels_list[itr]
             if itr == 0:
                 # first conv block
-                conv_block = self._conv_blocks(in_channels, out_channels, kernel_size = kernel_size, pool_size = pool_size, padding = "same")
+                conv_block = self._conv_blocks(in_channels,
+                                               out_channels,
+                                               kernel_size = kernel_size,
+                                               pool_size = pool_size,
+                                               padding = "same",
+                                               dropout = dropout_prob[itr])
                 padding_size = (kernel_size - 1) / 2
 
 
             else:
-                conv_block = self._conv_blocks(in_channels, out_channels, kernel_size = kernel_size, pool_size = pool_size, padding = 0)
+                conv_block = self._conv_blocks(in_channels,
+                                               out_channels,
+                                               kernel_size = kernel_size,
+                                               pool_size = pool_size,
+                                               padding = 0,
+                                               dropout = dropout_prob[itr])
                 padding_size = 0
 
             height, width = self._compute_ft_map_shape(height, width, kernel_size, 1, padding_size, pool_size)
@@ -60,15 +71,17 @@ class LeNet(nn.Module):
     
     def _conv_blocks(self, in_channels: int, out_channels: int,
                      kernel_size: int, pool_size: int,
-                     padding: int = 0):
+                     padding: int = 0,
+                     dropout: float = 0.2):
         conv_layer = nn.Conv2d(in_channels, out_channels, kernel_size, stride= 1, padding = padding)
         relu = nn.ReLU()
         pool_layer = nn.MaxPool2d(kernel_size = pool_size, stride = pool_size)
-
+        dropout_layer = nn.Dropout(dropout)
         conv_block = nn.Sequential(
                         conv_layer,
                         relu,
-                        pool_layer
+                        pool_layer,
+                        dropout_layer
         )
 
         return conv_block
@@ -106,7 +119,8 @@ if __name__ == "__main__":
     pool_size = 2
     n_linear_layers = 2
     n_neurons_list = [84, 10]
-    model = LeNet(list(x.shape), n_conv_blocks, out_channel_list, kernel_size, pool_size, n_linear_layers, n_neurons_list)
+    dropout_prob = [0.2, 0.2, 0.2]
+    model = LeNet(list(x.shape), n_conv_blocks, out_channel_list, kernel_size, pool_size, n_linear_layers, n_neurons_list, dropout_prob)
     y = model(x)
     print(y.shape)
 
