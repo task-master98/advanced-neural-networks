@@ -12,7 +12,7 @@ import os
 METADATA_NAMES = {
     "MNIST": "mnist",
     "FashionMNIST": "fashion_mnist",
-    "CIFAR10": "cifar_10"
+    "CIFAR10": "cifar10"
 }
 
 class Representations(torch.utils.data.Dataset):
