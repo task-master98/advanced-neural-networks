@@ -25,7 +25,8 @@ class Representations(torch.utils.data.Dataset):
             self.config = config
 
         self.root_dir = self.config["root_dir"][location]
-        self.module_dir = os.path.dirname(self.root_dir)
+        self.module_dir = self.config["module_dir"][location]
+        
         self.data_dir = os.path.join(self.root_dir, f"{data_type}_representations")
         if not os.path.exists(self.data_dir):
             raise FileNotFoundError("No such dataset available")
