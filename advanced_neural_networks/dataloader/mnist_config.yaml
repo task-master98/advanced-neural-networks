@@ -2,6 +2,8 @@ root_dir:
     local: "~/Projects/advanced-neural-networks/data"
     cloud: "/home/jupyter-iroy2/advanced-neural-networks/data/"
 download: True
+train_metadata: "train_metadata.csv"
+test_metadata: "test_metadata.csv"
 MNIST:
   dataset_statistics:
     mean: [0.1307]
