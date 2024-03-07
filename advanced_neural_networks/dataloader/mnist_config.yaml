@@ -1,6 +1,9 @@
 root_dir:
     local: "~/Projects/advanced-neural-networks/data"
     cloud: "/home/jupyter-iroy2/advanced-neural-networks/data/"
+module_dir:
+    local: "~/Projects/advanced-neural-networks/advanced_neural_networks/"
+    cloud: "/home/jupyter-iroy2/advanced-neural-networks/advanced_neural_networks/"
 download: True
 train_metadata: "train_metadata.csv"
 test_metadata: "test_metadata.csv"
