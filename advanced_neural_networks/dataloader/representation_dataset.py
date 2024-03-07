@@ -25,11 +25,12 @@ class Representations(torch.utils.data.Dataset):
             self.config = config
 
         self.root_dir = self.config["root_dir"][location]
+        self.module_dir = os.path.dirname(self.root_dir)
         self.data_dir = os.path.join(self.root_dir, f"{data_type}_representations")
         if not os.path.exists(self.data_dir):
             raise FileNotFoundError("No such dataset available")
         
-        self.metadata_dir = os.path.join(self.root_dir, "metadata")
+        self.metadata_dir = os.path.join(self.module_dir, "metadata")
         metadata_filename = METADATA_NAMES[data_type]
         train_meta_suffix = self.config["train_metadata"]
         val_meta_suffix = self.config["test_metadata"]       
