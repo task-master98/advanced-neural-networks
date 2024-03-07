@@ -6,9 +6,9 @@ dataset:
   test_metadata: "test_metadata.csv"
   download: True
   MNIST:
-  dataset_statistics:
-    mean: [0.1307]
-    std: [0.3081]
+    dataset_statistics:
+      mean: [0.1307]
+      std: [0.3081]
   FashionMNIST:
     dataset_statistics:
         mean: [0.5]
