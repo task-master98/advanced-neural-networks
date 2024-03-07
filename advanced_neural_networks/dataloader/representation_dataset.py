@@ -49,6 +49,9 @@ class Representations(torch.utils.data.Dataset):
         representation_data = np.load(file_path)
         return representation_data["x"], representation_data["y"]
     
+    def __len__(self):
+        return len(self.metadata_df)
+    
     def __getitem__(self, idx):
         x, y = self.load_representation(idx)
         metadata_label = self.metadata_df.iloc[idx].to_dict()["label"]
