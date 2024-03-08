@@ -57,6 +57,8 @@ class Representations(torch.utils.data.Dataset):
         metadata_label = self.metadata_df.iloc[idx].to_dict()["label"]
         assert metadata_label == y[0]
 
+        x = x.squeeze()        
+        assert x.ndim == 1
         x = torch.Tensor(x)
         y = torch.Tensor(y)
         return x, y
