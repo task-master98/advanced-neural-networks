@@ -76,7 +76,7 @@ class RBFTrainer(MNISTTrainer):
                                   batch_size = self.batch_size) 
 
         rbf_layer = RBFLayer(**rbf_params)
-        model = model.to(device)
+        rbf_layer = rbf_layer.to(device)
         self.configure_optimizers(model, **optimizer_params)
         self.criterion = self.criterion.to(device)        
 
