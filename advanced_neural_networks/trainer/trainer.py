@@ -64,14 +64,13 @@ class MNISTTrainer:
         self.learning_rate = self.trainer_config["lr"]
         self.batch_size = self.trainer_config["batch_size"]
         self.model = None
+        loss_type = self.trainer_config["loss"]
+        self.criterion = self.LOSS_DICT[loss_type]()
         # self.configure_optimizers()    
     
     
-    def configure_optimizers(self, model, optimizer_type: str, lr: float):        
-        
-        self.optimizer = getattr(torch.optim, optimizer_type)(model.parameters(), lr = lr)
-        loss_type = self.trainer_config["loss"]
-        self.criterion = self.LOSS_DICT[loss_type]()
+    def configure_optimizers(self, model, optimizer_type: str, lr: float):  
+        self.optimizer = getattr(torch.optim, optimizer_type)(model.parameters(), lr = lr)        
     
     def train_epoch(self, iterator, model, device):
         epoch_loss = 0.0
