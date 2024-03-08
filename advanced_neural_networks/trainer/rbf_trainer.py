@@ -77,7 +77,7 @@ class RBFTrainer(MNISTTrainer):
 
         rbf_layer = RBFLayer(**rbf_params)
         rbf_layer = rbf_layer.to(device)
-        self.configure_optimizers(model, **optimizer_params)
+        self.configure_optimizers(rbf_layer, **optimizer_params)
         self.criterion = self.criterion.to(device)        
 
         for epoch in range(self.max_epochs):
