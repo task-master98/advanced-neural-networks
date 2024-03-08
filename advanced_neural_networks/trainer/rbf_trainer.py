@@ -26,6 +26,9 @@ class RBFTrainer(MNISTTrainer):
     OPTIMIZER_DICT = {"adam": torch.optim.Adam,
                       "adamax": torch.optim.Adamax,
                       "rmsprop": torch.optim.RMSprop}
+    
+    LOSS_DICT = {"bce": torch.nn.BCEWithLogitsLoss,
+                 "cross_entropy": torch.nn.CrossEntropyLoss}
 
     DATA_PREFIX = {"MNIST": "mnist",
                    "FashionMNIST": "fashion_mnist",
