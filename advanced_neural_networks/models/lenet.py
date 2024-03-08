@@ -15,7 +15,8 @@ class LeNet(nn.Module):
     def __init__(self, input_shape: tuple, n_conv_blocks: int, out_channel_list: list,
                  kernel_size: int, pool_size: int, n_linear_layers: int,
                  n_neurons_list: list,
-                 dropout_prob: list):
+                 dropout_prob: list,
+                 lin_dropout_prob: list):
         super().__init__()
        
         self.input_shape = input_shape
@@ -62,7 +63,7 @@ class LeNet(nn.Module):
         in_features = int(out_channel_list[-1] * height * width)
         for jtr in range(n_linear_layers):
             out_features = n_neurons_list[jtr]
-            linear_block = self._linear_block(in_features, out_features)
+            linear_block = self._linear_block(in_features, out_features, lin_dropout_prob[jtr])
             self.linear_blocks.append(linear_block)
             in_features = out_features
         
@@ -74,23 +75,25 @@ class LeNet(nn.Module):
                      padding: int = 0,
                      dropout: float = 0.2):
         conv_layer = nn.Conv2d(in_channels, out_channels, kernel_size, stride= 1, padding = padding)
+        batch_norm = nn.BatchNorm2d(out_channels)
         relu = nn.ReLU()
         pool_layer = nn.MaxPool2d(kernel_size = pool_size, stride = pool_size)
         dropout_layer = nn.Dropout(dropout)
         conv_block = nn.Sequential(
                         conv_layer,
                         relu,
+                        batch_norm,
                         pool_layer,
                         dropout_layer
         )
 
         return conv_block
     
-    def _linear_block(self, in_features: int, out_features: int):
+    def _linear_block(self, in_features: int, out_features: int, dropout_prob: float):
         linear_layer = nn.Linear(in_features, out_features)
         relu_layer = nn.ReLU()
-
-        linear_block = nn.Sequential(linear_layer, relu_layer)
+        dropout = nn.Dropout(dropout_prob)
+        linear_block = nn.Sequential(linear_layer, relu_layer, dropout)
         return linear_block
     
     def _compute_ft_map_shape(self, height: int, width: int,
