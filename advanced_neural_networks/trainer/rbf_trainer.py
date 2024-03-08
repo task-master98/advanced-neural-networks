@@ -65,6 +65,52 @@ class RBFTrainer(MNISTTrainer):
     #     cluster_centers = torch.Tensor(k_means.cluster_centers_)
     #     return cluster_centers 
 
+    def train_epoch(self, iterator, model, device):
+        epoch_loss = 0.0
+        epoch_acc = 0.0        
+        model.train()
+
+        for (x, y) in tqdm_notebook(iterator, desc="Training", leave=False):
+
+            x = x.to(device)
+            y = y.squeeze().to(device)
+            
+            self.optimizer.zero_grad()
+
+            y_pred = model(x)
+
+            loss = self.criterion(y_pred, y.long())
+            acc = self.calculate_accuracy(y_pred, y.long())
+
+            loss.backward()
+            self.optimizer.step()
+
+            epoch_loss += loss.item()
+            epoch_acc += acc
+        
+        return epoch_loss / len(iterator), epoch_acc / len(iterator)
+    
+    def evaluate_epoch(self, iterator, model, device):
+
+        epoch_loss = 0.0
+        epoch_acc = 0.0        
+        model.eval()
+
+        with torch.no_grad():            
+            for (x, y) in tqdm_notebook(iterator, desc="Evaluating", leave=False):
+
+                x = x.to(device)
+                y = y.squeeze().to(device)
+
+                y_pred = model(x)
+                loss = self.criterion(y_pred, y.long())
+                acc = self.calculate_accuracy(y_pred, y.long())
+
+                epoch_loss += loss.item()
+                epoch_acc += acc
+
+        return epoch_loss / len(iterator), epoch_acc / len(iterator)
+
     def train(self, rbf_params, optimizer_params):
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')   
         metrics_df = pd.DataFrame()
