@@ -20,6 +20,7 @@ import advanced_neural_networks
 from advanced_neural_networks.trainer.trainer import MNISTTrainer
 from advanced_neural_networks.dataloader.representation_dataset import Representations
 from advanced_neural_networks.models.rbf_layer import RBFNetwork
+from advanced_neural_networks.trainer.callbacks import EarlyStopping
 
 class RBFTrainer(MNISTTrainer):
 
@@ -52,6 +53,8 @@ class RBFTrainer(MNISTTrainer):
                                     data_type = data_type,
                                     train = False,
                                     location = "cloud")
+
+        self.train_metadata_df = self.dataset.metadata_df
         
         self.kfolds = self.dataset_config["kfolds"]    
 
