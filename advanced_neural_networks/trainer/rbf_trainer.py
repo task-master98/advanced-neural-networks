@@ -65,7 +65,7 @@ class RBFTrainer(MNISTTrainer):
     def find_cluster_centers(self, feature_vec, n_clusters, max_iter = 100):        
         k_means = KMeans(n_clusters = n_clusters, max_iter = max_iter)
         k_means.fit(feature_vec)
-        cluster_centers = torch.Tensor(k_means.cluster_centers_, dtype=torch.float32)
+        cluster_centers = torch.tensor(k_means.cluster_centers_, dtype=torch.float32)
         return cluster_centers 
 
     def train_epoch(self, iterator, model, device):
