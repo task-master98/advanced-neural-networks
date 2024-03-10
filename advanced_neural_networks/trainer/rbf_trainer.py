@@ -150,7 +150,7 @@ class RBFTrainer(MNISTTrainer):
         self.configure_optimizers(rbf_layer, **optimizer_params)
         self.criterion = self.criterion.to(device)        
 
-        for epoch in range(self.max_epochs):
+        for epoch in tqdm_notebook(range(self.max_epochs), desc = "Epoch", leave = True):
 
             train_loss, train_acc = self.train_epoch(train_iterator, rbf_layer, device)
             val_loss, val_acc = self.evaluate_epoch(val_iterator, rbf_layer, device)
@@ -164,7 +164,71 @@ class RBFTrainer(MNISTTrainer):
             metrics_df = pd.concat([metrics_df, pd.DataFrame([metrics])], ignore_index = True)
         
         return metrics_df, rbf_layer
-        
+    
+    def cross_validate(self, rbf_params, optimizer_params):
+
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')        
+
+        fold_dict = self.initialize_folds(self.kfolds)
+        metrics_df = pd.DataFrame()
+        best_valid_loss = float("inf")
+        best_model = None
+
+        for fold_idx in tqdm_notebook(fold_dict, desc = "Cross Validation", leave = True):
+            
+            fold_info = fold_dict[fold_idx]
+            val_fold_idx = fold_info["val"][0]
+
+            train_indices = self.train_metadata_df.loc[self.train_metadata_df["fold"] != val_fold_idx].index.to_numpy()
+            val_indices = self.train_metadata_df.loc[self.train_metadata_df["fold"] == val_fold_idx].index.to_numpy()
+
+            train_dataset = Subset(self.dataset, train_indices)
+            val_dataset = Subset(self.dataset, val_indices)
+
+            train_iterator = DataLoader(train_dataset,
+                                        batch_size = self.batch_size,
+                                        shuffle = True)
+            val_iterator = DataLoader(val_dataset,
+                                      batch_size = self.batch_size)
+            
+            n_clusters = rbf_params["kmeans"]["n_clusters"]
+            max_iter = rbf_params["kmeans"]["max_iter"]
+            print(f"Finding Cluster Centers...")
+            cluster_centers = self.find_cluster_centers(self.x_train_numpy, n_clusters, max_iter)
+
+            model_params = rbf_params["model"]
+            model_params["centers"] = cluster_centers
+
+            rbf_layer = RBFNetwork(**model_params)
+            rbf_layer = rbf_layer.to(device)
+            self.configure_optimizers(rbf_layer, **optimizer_params)
+            self.criterion = self.criterion.to(device)    
+
+            early_stopping = EarlyStopping(patience = 3)
+
+            for epoch in tqdm_notebook(range(self.max_epochs), desc = "Epoch", leave = False):
+
+                train_loss, train_acc = self.train_epoch(train_iterator, rbf_layer, device)
+                val_loss, val_acc = self.evaluate_epoch(val_iterator, rbf_layer, device)
+
+                metrics = {"train_loss": train_loss,
+                            "val_loss": val_loss,
+                            "train_acc": train_acc,
+                            "val_acc": val_acc,
+                            "epoch": epoch,
+                            "fold_idx": fold_idx}
+                
+                metrics_df = pd.concat([metrics_df, pd.DataFrame([metrics])], ignore_index = True)
+
+                if early_stopping.should_stop(val_loss):
+                    print(f"Early stopping at epoch {epoch}, validation loss: {val_loss}")
+                    break
+
+                if val_loss < best_valid_loss:
+                    best_valid_loss = val_loss
+                    best_model = model
+            
+        return metrics_df, best_model
 
 
 
