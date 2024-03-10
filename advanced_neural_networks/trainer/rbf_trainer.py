@@ -229,7 +229,7 @@ class RBFTrainer(MNISTTrainer):
 
                 if val_loss < best_valid_loss:
                     best_valid_loss = val_loss
-                    best_model = model
+                    best_model = rbf_layer
             
         return metrics_df, best_model
 
