@@ -143,10 +143,10 @@ def rbf_objective(trial: optuna.Trial, data_type: str, train_mode: str):
 
     if train_mode == "cross_validate":
         print(f"Starting Cross Validation...")
-        metrics_df, model = mnist_trainer.cross_validate(model_params, optimizer_params)
+        metrics_df, model = model_trainer.cross_validate(rbf_params, optimizer_params)
     elif train_mode == "simple":
         print(f"Starting simple training...")
-        metrics_df, model = mnist_trainer.train(model_params, optimizer_params)
+        metrics_df, model = model_trainer.train(rbf_params, optimizer_params)
     
     start_date = trial.datetime_start
     metrics_df["optuna_trial"] = trial.number
