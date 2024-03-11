@@ -19,6 +19,7 @@ import json
 import advanced_neural_networks
 from advanced_neural_networks.models.lenet import LeNet
 from advanced_neural_networks.trainer.trainer import MNISTTrainer
+from advanced_neural_networks.trainer.rbf_trainer import RBFTrainer
 
 module_dir = advanced_neural_networks.__path__[0]
 results_dir = os.path.join(module_dir, "results")
@@ -30,6 +31,12 @@ INPUT_SHAPE = {
     "MNIST": [1, 1, 28, 28],
     "FashionMNIST": [1, 1, 28, 28],
     "CIFAR10": [1, 3, 32, 32]
+}
+
+REPRESENTATION_SHAPE = {
+    "MNIST": [720],
+    "FashionMNIST": [720],
+    "CIFAR10": [512]
 }
 
 class NumpyEncoder(json.JSONEncoder):
@@ -109,6 +116,46 @@ def objective(trial: optuna.Trial, data_type: str, train_mode: str):
     metrics = get_best_metrics(metrics_df, train_mode)
 
     return metrics
+
+def rbf_objective(trial: optuna.Trial, data_type: str, train_mode: str):
+
+    input_shape = REPRESENTATION_SHAPE[data_type]
+    n_clusters = trial.suggest_int("n_clusters", 10, 400)
+
+    rbf_params = {
+    "kmeans": {"n_clusters": n_clusters, "max_iter": 100},
+    "model": {
+        "input_dim": input_shape,
+        "num_centers": n_clusters,
+        "output_dim": 10
+    }}
+
+    batch_size = 64
+    optimizer_type = trial.suggest_categorical("optimizer", ["Adam", "Adamax"])
+    learning_rate = trial.suggest_float("lr", 1e-5, 1e-1, log = True)
+    optimizer_params = {"optimizer_type": optimizer_type, "lr": learning_rate}
+    max_epochs = 20
+
+    model_trainer = RBFTrainer(trainer_config, location = "cloud", data_type = data_type)
+    model_trainer.max_epochs = max_epochs
+    model_trainer.batch_size = batch_size
+    model_trainer.criterion = nn.MSELoss()
+
+    if train_mode == "cross_validate":
+        print(f"Starting Cross Validation...")
+        metrics_df, model = mnist_trainer.cross_validate(model_params, optimizer_params)
+    elif train_mode == "simple":
+        print(f"Starting simple training...")
+        metrics_df, model = mnist_trainer.train(model_params, optimizer_params)
+    
+    start_date = trial.datetime_start
+    metrics_df["optuna_trial"] = trial.number
+    save_metrics_df(metrics_df, start_date, trial.number)
+
+    metrics = get_best_metrics(metrics_df, train_mode)
+    return metrics
+
+
 
 if __name__ == "__main__":
     study = optuna.create_study(direction = "maximize")
